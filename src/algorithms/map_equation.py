@@ -18,7 +18,6 @@ from collections import OrderedDict, Counter, deque
 # from random import random
 # import operator
 
-
 def map_equation(G, partition_map):
     if len(G.nodes()) < 2:
         return 1.0, 0, 1.0
@@ -34,7 +33,7 @@ def map_equation(G, partition_map):
     id2comm = dict(enumerate(comm2id.keys()))
     original_community_map = dict(enumerate(extract_community_map(partition_map)))  # For some reason partition zero misses
     community_map = {idx: [node2id[node] for node in community] for idx, community in original_community_map.items()}
-    partition_map = {node2id[node]: comm2id[community] for node, community in partition_map.items()}
+    partition_map = {node2id[node]: community for node, community in partition_map.items()}
     G = nx.relabel_nodes(G, node2id)
     A = np.array(nx.adjacency_matrix(G).todense())
 
@@ -66,7 +65,7 @@ def map_equation(G, partition_map):
                 adjacent_partition_matrix[node][adj_node] = partition_map[adj_node]
 
     diagonal = np.diagonal(adjacent_partition_matrix)
-
+    # print(adjacent_partition_matrix)
     tmp = adjacent_partition_matrix.copy()
     np.fill_diagonal(tmp, np.nan)
     zm2 = np.ma.masked_where(np.isnan(adjacent_partition_matrix), A)
@@ -74,7 +73,10 @@ def map_equation(G, partition_map):
     apm_linkage = zm == diagonal[:, None]
     A_in = np.ma.masked_where(np.invert(apm_linkage), A)
     A_ex = np.ma.masked_where(apm_linkage == True, A)
+
     unique_partitions = np.unique(list(partition_map.values()))
+    mapping = {int(prt): idx for idx, prt in enumerate(unique_partitions)}
+    num_partitions = len(mapping)
 
     num_partitions = len(unique_partitions)
     partition_ex_links = np.zeros(num_partitions)
@@ -83,8 +85,11 @@ def map_equation(G, partition_map):
     node_partition_in_links = np.array(A_in.sum(axis=1)).flatten()
     node_partition_ex_links = np.array(A_ex.sum(axis=1)).flatten()
 
+    # print(node_partition_in_links)
+    # print(node_partition_ex_links)
+
     for partition in unique_partitions:
-        partition = int(partition)
+        partition = mapping[partition]
         indices_to_check = list(np.where(diagonal == partition)[0])
         partition_in_links[partition] = sum(node_partition_in_links[indices_to_check])
         partition_ex_links[partition] = sum(node_partition_ex_links[indices_to_check])
@@ -104,6 +109,7 @@ def map_equation(G, partition_map):
     q_out = q_out_i.sum()
     p_circle_i = p_a_i + q_out_i
 
+    print(partition_exit_prob)
     # print(p_a_i, "\n", q_out_i, "\n", q_out, "\n", p_circle_i, "\n", p_u, "\n")
 
     H_Q = -sum(np.nan_to_num((q_out_i / q_out) * np.log2(q_out_i / q_out)))
@@ -139,7 +145,7 @@ def map_equation_improved(G, partition_map, DEBUG=False):
     community_map = {idx: [node2id[node] for node in community] for idx, community in original_community_map.items()}
     G = nx.relabel_nodes(G, node2id)
 
-    node_partition_in_links, node_partition_ex_links, node_weights, node_partitions = map_equation_essentials(G, partition_map, DEBUG)
+    node_partition_in_links, node_partition_ex_links, node_weights, node_partitions, A_prt, A_masked = map_equation_essentials(G, partition_map, DEBUG)
     p_a_i, q_out_i, q_out, p_circle_i, p_u = retrieve_linkings(node_partition_in_links, node_partition_ex_links, node_weights, node_partitions)
     L, index_codelength, module_codelength = compute_minimal_codelength(p_a_i, q_out_i, q_out, p_circle_i, p_u, node_partitions)
     return L, index_codelength, module_codelength
@@ -174,36 +180,44 @@ def map_equation_essentials(G, partition_map, DEBUG=False):
     # print(A)
     # print(adjacent_partition_matrix)
 
-    diagonal = np.diagonal(adjacent_partition_matrix)
-
     # tmp = adjacent_partition_matrix.copy()
     # np.fill_diagonal(tmp, np.nan)
-    zm = np.ma.masked_where(np.isnan(adjacent_partition_matrix), adjacent_partition_matrix)
-    apm_linkage = zm == diagonal[:, None]
-    A_in = np.ma.masked_where(np.invert(apm_linkage), A)
-    A_ex = np.ma.masked_where(apm_linkage, A)  # Where is True
     # partitions = np.array(list(partition_map.values()))
     # unique_partitions = np.unique(partitions)
 
     # num_partitions = len(unique_partitions)
-
-    node_partition_in_links = np.array(A_in.sum(axis=1)).flatten()
-    node_partition_ex_links = np.array(A_ex.sum(axis=1)).flatten()
+    node_partition_in_links, node_partition_ex_links, diagonal, zm = aggregate_in_ex_nodes(A, adjacent_partition_matrix)
     node_weights = np.array(A.sum(axis=0)).squeeze()
 
-    return node_partition_in_links, node_partition_ex_links, node_weights, diagonal
+    return node_partition_in_links, node_partition_ex_links, node_weights, diagonal, adjacent_partition_matrix, A
+
+
+def aggregate_in_ex_nodes(A, adjacent_partition_matrix):
+    # node2id = dict({node: idx for idx, node in enumerate(G.nodes())})
+    # id2node = dict(enumerate(node2id.keys()))
+    # comm2id = dict({community: idx for idx, community in enumerate(set(partition_map.values()))})
+    # id2comm = dict(enumerate(comm2id.keys()))
+    diagonal = np.diagonal(adjacent_partition_matrix)
+    zm = np.ma.masked_where(np.isnan(adjacent_partition_matrix), adjacent_partition_matrix)
+    apm_linkage = zm == diagonal[:, None]
+    A_in = np.ma.masked_where(np.invert(apm_linkage), A)
+    A_ex = np.ma.masked_where(apm_linkage, A)  # Where is True
+    node_partition_in_links = np.array(A_in.sum(axis=1)).flatten()
+    node_partition_ex_links = np.array(A_ex.sum(axis=1)).flatten()
+    return node_partition_in_links, node_partition_ex_links, diagonal, zm
 
 
 def retrieve_linkings(node_partition_in_links, node_partition_ex_links, node_weights, partition_mapping):
     unique_partitions = np.unique(partition_mapping)
-    num_partitions = len(unique_partitions)
+    mapping = {int(prt): idx for idx, prt in enumerate(unique_partitions)}
+    num_partitions = len(mapping)
     partition_ex_links = np.zeros(num_partitions)
     partition_in_links = np.zeros(num_partitions)
     for partition in unique_partitions:
-        partition = int(partition)
-        indices_to_check = list(np.where(partition_mapping == partition)[0])
-        partition_ex_links[partition] = sum(node_partition_ex_links[indices_to_check])
-        partition_in_links[partition] = sum(node_partition_in_links[indices_to_check])
+        mapped_partition = mapping[partition]
+        indices_to_check = list(np.where(partition_mapping == mapped_partition)[0])
+        partition_ex_links[mapped_partition] = sum(node_partition_ex_links[indices_to_check])
+        partition_in_links[mapped_partition] = sum(node_partition_in_links[indices_to_check])
 
     # print(partition_ex_links)
     # print(partition_in_links)
@@ -224,25 +238,28 @@ def retrieve_linkings(node_partition_in_links, node_partition_ex_links, node_wei
     p_u = node_weights / node_weights.sum()
 
     for node_weight, community in zip(p_u, partition_mapping):
-        partition_probabilities[int(community)] += node_weight
+        partition_probabilities[mapping[community]] += node_weight
 
     p_a_i = partition_probabilities
     q_out_i = partition_exit_prob
     q_out = q_out_i.sum()
     p_circle_i = p_a_i + q_out_i
 
+    print(partition_exit_prob)
     # print(p_a_i, "\n", q_out_i, "\n", q_out, "\n", p_circle_i, "\n", p_u, "\n")
     return p_a_i, q_out_i, q_out, p_circle_i, p_u
 
 
 def compute_minimal_codelength(p_a_i, q_out_i, q_out, p_circle_i, p_u, partition_mapping):
+    mapping = {prt: idx for idx, prt in enumerate(np.unique(partition_mapping))}
+    num_partitions = len(mapping)
 
     H_Q = -sum(np.nan_to_num((q_out_i / q_out) * np.log2(q_out_i / q_out)))
     term1 = -np.nan_to_num((q_out_i / p_circle_i) * np.log2((q_out_i / p_circle_i)))
-    term2 = np.zeros(len(np.unique(partition_mapping)))
+    term2 = np.zeros(num_partitions)
 
     for node_weight, community in zip(p_u, partition_mapping):
-        community = int(community)
+        community = mapping[community]
         term2[community] += node_weight / p_circle_i[community] * np.log2(node_weight / p_circle_i[community]) if node_weight != 0 else 0
 
     H_P_i = term1 - term2

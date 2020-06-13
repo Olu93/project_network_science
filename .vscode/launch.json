@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/experiment_small.py",
-            "console": "integratedTerminal"
+            "console": "internalConsole"
         },
         {
             "name": "Python: ME",

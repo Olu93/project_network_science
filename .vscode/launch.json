@@ -16,14 +16,14 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/playgrounds/map_equation_playground.py",
-            "console": "integratedTerminal"
+            "console": "internalConsole"
         },
         {
             "name": "Python: big",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/experiment.py",
-            "console": "integratedTerminal"
+            "console": "externalTerminal"
         }
     ]
 }

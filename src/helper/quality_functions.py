@@ -4,12 +4,16 @@ import community as community_louvain
 import numpy as np
 from networkx.algorithms import community as algorithms
 
-from algorithms.map_equation import map_equation
+from algorithms.map_equation import map_equation, map_equation_old
 from helper.utils import extract_community_map
 
 
 def map_equation_wrapper(partition, G):
     L, index_codelength, module_codelength = map_equation(G, partition)
+    return -L
+
+def map_equation_wrapper_old(partition, G):
+    L, index_codelength, module_codelength = map_equation_old(G, partition)
     return -L
 
 

@@ -7,13 +7,13 @@ if __name__ == "__main__":
 
     import networkx as nx
     from infomap import Infomap, MapEquation, InfoNode
-    from algorithms.map_equation import map_equation, map_equation_improved
+    from algorithms.map_equation import map_equation, map_equation_improved, map_equation_old
     from helper.utils import generate_benchmark_graph
     from helper.visualization import visualize_benchmark_graph
     import matplotlib.pyplot as plt
 
     # G = nx.karate_club_graph()
-    G = nx.barbell_graph(4, 1)
+    G = nx.barbell_graph(5, 1)
     # G = nx.bull_graph()
     # G = nx.generators.erdos_renyi_graph(10, 0.5)
     # G = nx.generators.cubical_graph()
@@ -41,17 +41,17 @@ if __name__ == "__main__":
     # infomap_partition = dict(sorted(result.items()))
 
     codelength, index_codelength, module_codelength = map_equation(G, infomap_partition)
-    print("")
-    print("------------------")
-    print("")
     codelength_, index_codelength_, module_codelength_ = map_equation_improved(G, infomap_partition, False)
+    _codelength_, _index_codelength_, _module_codelength_ = map_equation_old(G, infomap_partition)
 
     print("")
     print("Result")
     print(f"Calculated_1 {codelength} = {index_codelength} + {module_codelength}")
     print(f"Calculated_2 {codelength_} = {index_codelength_} + {module_codelength_}")
+    print(f"Calculated_3 {_codelength_} = {_index_codelength_} + {_module_codelength_}")
     print(f"Correct is   {im.codelengths[0]} = {im.index_codelength} + {im.module_codelength}")
     print(f"1. Difference is {im.codelengths[0]-codelength}")
     print(f"2. Difference is {im.codelengths[0]-codelength_}")
+    print(f"3. Difference is {im.codelengths[0]-_codelength_}")
     visualize_benchmark_graph(G, pos, infomap_partition)
     # plt.show()

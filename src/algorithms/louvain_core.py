@@ -31,12 +31,13 @@ class LouvainCoreAlgorithm:
 
     # G = None
 
-    def __init__(self, max_iter=-1, fitness_function=community_louvain.modularity, verbose=False, max_local_movements=100, stop_after=-1):
+    def __init__(self, max_iter=-1, fitness_function=community_louvain.modularity, verbose=False, max_local_movements=100, stop_below=0.01):
         super().__init__()
         self.fitness_function = fitness_function
         self.verbose = verbose
         self.max_iter = max_iter
         self.max_local_movements = max_local_movements
+        self.stop_below = stop_below
         # self.run_iteration.__name__ = fitness_function.__name__
         print(f"Inititalizing algorithm with {self.run_iteration.__name__}")
 

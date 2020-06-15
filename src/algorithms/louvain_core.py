@@ -65,7 +65,6 @@ class LouvainCoreAlgorithm:
     def run_iteration(self, G, initial_partition_map, max_iter=-1):
         tmp_partition_map = initial_partition_map.copy()
         tmp_G = G
-
         while True:
             new_partition_map, final_fitness = self.local_movement(tmp_G, tmp_partition_map)
             if max_iter == 0:

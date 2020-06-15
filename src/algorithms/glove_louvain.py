@@ -47,8 +47,6 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
         self.level_word_vectors = []
         self.stats = {"local_moving": [], "cooccurence_matrices": [], "partision_diff_sums": []}
         self.levels.append(initial_partition_map)
-        # initial_fitness = self.fitness_function(initial_partition_map, G)
-        # self.null_fitness.append(initial_fitness)
         self.level_fitness.append(0)
         self.level_graphs.append(G)
         self.gain_stats = []
@@ -65,17 +63,15 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
         node2id = dict({node: idx for idx, node in enumerate(G.nodes())})
         id2node = dict(enumerate(node2id.keys()))
         comm2id = dict({community: idx for idx, community in enumerate(set(partition_map.values()))})
-        # id2comm = dict(enumerate(comm2id.keys()))
-        # partition_matrix = np.zeros((num_nodes, num_partitions))
         partition_map_copy = {node2id[node]: comm2id[community] for node, community in partition_map.items()}
         resulting_map = partition_map_copy.copy()
 
         G = nx.relabel_nodes(G, node2id)
+        A = nx.adjacency_matrix(G).todense()
 
-        # initial_labels = np.array(list(partition_map.values()))
         word_vectors = self.level_word_vectors[-1]
         curr_overall_differences, partition_gains = self._compute_overall_differences({node: 0 for node in partition_map_copy}, word_vectors)
-        last_diff = curr_overall_differences
+        last_diff = 1000
         # initial run
         if self.mode == 0:
             # Random Order with closest neighbor initialisation
@@ -112,48 +108,38 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
         log_file_2.write(f"\n--- START Sum: {prev_sum_gains:.10f}---\n")
         while True:
             rollier = deque(maxlen=10)
-            # rollier.append(1)
             current_communities = np.unique(list(partition_map_copy.values()))
             random_node_order = np.random.permutation(list(partition_map_copy.keys()))
             for node_idx in random_node_order:
-                # print("")
                 curr_prt = partition_map_copy[node_idx]
-                # print("")
-                # print(f"----{node_idx}----")
+
                 prt_candidates = set(partition_map_copy[adj_node] for adj_node in list(G[node_idx])
                                      #   if partition_map_copy[adj_node] != curr_prt
                                      )
 
                 empty_community = next(iter(set(range(min(current_communities), max(current_communities) + 2)) - set(current_communities)))
                 prt_candidates.add(empty_community)
-                # print(f"{len(prt_candidates)} candidates")
                 prt_nodes = [node for node, community in partition_map_copy.items() if community == curr_prt and node != node_idx]
-                # print(prt_nodes)
                 curr_avg_diff = self._L2_distance(prt_nodes + [node_idx], word_vectors)
                 curr_avg_diff_with_change = self._L2_distance(prt_nodes, word_vectors)
-                # print(f"Node {node_idx} curr partition {curr_prt}: {curr_avg_diff} -> {curr_avg_diff_with_change}")
                 giver_normalizer = len(prt_nodes)
-                # giver_normalizer = 1
                 giver_gain = (curr_avg_diff_with_change - curr_avg_diff).cpu().numpy() / giver_normalizer if len(prt_nodes) < 1 else 0.00001
-                # if giver_gain < 0:
-                #     print(f"Giver gain is negative")
-                #     continue
-                # print(giver_gain, curr_avg_diff_with_change, curr_avg_diff)
+
                 change_candidates = []
                 for idx, prt_candidate in enumerate(prt_candidates):
-                    # if partition_map_copy.get(prt_candidate) != curr_prt:
-                    #     continue
+
                     prt_candidate_nodes = [node for node, community in partition_map_copy.items() if community == prt_candidate]
                     candidate_avg_diff = self._L2_distance(prt_candidate_nodes, word_vectors)
                     candidate_avg_diff_with_change = self._L2_distance(prt_candidate_nodes + [node_idx], word_vectors)
                     receiver_gain = (candidate_avg_diff - candidate_avg_diff_with_change).cpu().numpy() if len(prt_candidate_nodes) > 0 else 0.00001
-                    # print(f"Node {node_idx} to partition {prt_candidate}: {change_score:.8f} = {candidate_avg_diff:.8f} - {candidate_avg_diff_with_change:.8f}")
-                    receiver_normalizer = len(prt_candidate_nodes)
+                    receiver_normalizer = sum(np.diagonal(A)[prt_candidate_nodes])
                     # receiver_normalizer = 1
                     if receiver_normalizer == 0:
                         receiver_normalizer = 1
 
-                    change_gain = (receiver_gain * giver_gain / receiver_normalizer)
+                    # change_gain = (receiver_gain / receiver_normalizer)
+                    change_gain = (receiver_gain + giver_gain / receiver_normalizer)
+
                     difference_increase = np.sum(list(partition_gains.values())) - giver_gain + receiver_gain
                     change_candidates.append((prt_candidate, change_gain, receiver_gain, giver_gain, receiver_normalizer, change_gain / difference_increase))
 
@@ -161,32 +147,9 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
                 maximum_gain = max(change_candidates, key=operator.itemgetter(choose))
 
                 new_prt, abs_gain, receiver_gain, giver_gain, receiver_normalizer, difference_increase = maximum_gain
-
-                # curr_overall_differences, partition_gains = self._compute_overall_differences(partition_map_copy, word_vectors)
-                # partition_gains[curr_prt] -= giver_gain
-                # partition_gains[new_prt] += receiver_gain
-                # expected_sum_of_gains = np.sum(list(partition_gains.values()))
-                # log_file_2.write(f"\nNode: {node_idx:>3} | Prt: {curr_prt:>3} -> {new_prt:>3}\n")
-                # log_file_2.write(f"Expected increase of difference: {expected_sum_of_gains-prev_sum_gains:.10f}\n")
-                # log_file_2.write(f"Sum (partial): {expected_sum_of_gains:.10f}\n")
-                # log_file_2.write(f"Sum          : {curr_overall_differences + receiver_gain:.10f}\n")
-                # if (expected_sum_of_gains - prev_sum_gains) > 0.1:
-                #     # print(f"Not doing it!")
-                # partition_gains[curr_prt] += giver_gain
-                # partition_gains[new_prt] -= receiver_gain
-
-                #     continue
-                # print(f"Node {node_idx} to partition {prt_candidate}: {change_score:.8f} = {candidate_avg_diff:.8f} - {candidate_avg_diff_with_change:.8f}")
-                # print(expected_sum_of_gains - prev_sum_gains)
-
-                # log_file.write(
-                #     f"Node: {node_idx:>3} | Prt: {curr_prt:>3} -> {new_prt:>3} | {abs_gain:>5.10f} = {receiver_gain:>.10f} * {giver_gain:>.10f} / {receiver_normalizer:>3}\n")
                 partition_map_copy[node_idx] = new_prt
 
-                # TODO: Required for special curve
-                # curr_overall_differences, partition_gains = self._compute_overall_differences(partition_map_copy, word_vectors)
-                # log_file_2.write(f"Sum : {curr_overall_differences:.10f} | Diff: {curr_overall_differences - prev_sum_gains:.10f}\n")
-                # prev_sum_gains = curr_overall_differences
+
 
                 rollier.append(abs_gain)
                 rolling_mean = np.mean(rollier)
@@ -199,7 +162,6 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
                     "abs": abs_gain,
                     "candidates": len(partition_map_copy),
                     "partitions": len(set(partition_map_copy.values())),
-                    # "partition_diff_sum": curr_overall_differences
                 }
                 self.stats["local_moving"].append(data_point)
                 num_changes += 1
@@ -207,10 +169,10 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
             curr_overall_differences, partition_gains = self._compute_overall_differences(partition_map_copy, word_vectors)
             log_file_2.write(f"Sum : {curr_overall_differences:.10f} | Diff: {curr_overall_differences - prev_sum_gains:.10f}\n")
             num_remaining_partitions = len(set(partition_map_copy.values()))
-            iter_diff = curr_overall_differences - prev_iteration_sum
+            iter_diff = np.abs(curr_overall_differences - prev_iteration_sum)
             print(f"Num Partitions {num_remaining_partitions} | Sum {curr_overall_differences} | Diff {np.abs(iter_diff)} | Last {np.abs(last_diff - iter_diff)}")
-            if last_diff - iter_diff < self.stop_below:
-                print(f"BREAK: No difference from last run: {last_diff}:{iter_diff}")
+            if iter_diff < self.stop_below:
+                print(f"BREAK: No difference from last run: {iter_diff}:{last_diff}")
                 # resulting_map = partition_map_copy.copy()
                 break
             if num_remaining_partitions == 1 and not self.mode == 3:
@@ -223,7 +185,7 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
             #     break
             resulting_map = partition_map_copy.copy()
             prev_iteration_sum = curr_overall_differences
-            last_diff = np.abs(iter_diff)
+            last_diff = iter_diff
 
             cnt += 1
             if self.mode == 3:

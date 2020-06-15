@@ -21,7 +21,7 @@ from networkx.generators import community as generator
 # %%
 if __name__ == "__main__":
     # %%
-    G, pos = utils.generate_benchmark_graph(1000, 0.1)
+    G, pos = utils.generate_benchmark_graph(250, 0.1)
     true_partition, true_community = utils.extract_true_communities(G)
     # G = nx.barbell_graph(5, 2)
     # G = nx.karate_club_graph()

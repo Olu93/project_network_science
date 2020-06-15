@@ -77,8 +77,8 @@ def show_intermediate_results(algorithm, G, true_map):
         visualize_benchmark_graph(G, pos, backtracked_map)
         return
 
-    fig, ax = plt.subplots(number_of_reductions, 1)
-    fig.set_size_inches(5, 10 * number_of_reductions)
+    fig, ax = plt.subplots(1, number_of_reductions)
+    fig.set_size_inches(5 * number_of_reductions, 5)
     for idx in range(0, number_of_reductions):
         backtracked_map = algorithm.decode_partition_map(idx)
         ax[idx].set_title(f"Level {idx}: {normalized_mutual_information(backtracked_map, true_map)}", fontsize=10)

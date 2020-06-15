@@ -35,9 +35,10 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
     level_word_vectors = None
     mode = None
 
-    def __init__(self, max_iter=20, fitness_function=community_louvain.modularity, verbose=False, max_local_movements=100, mode=-1, walk_length=int(1e5)):
+    def __init__(self, max_iter=20, fitness_function=community_louvain.modularity, verbose=False, max_local_movements=100, mode=-1, walk_length=int(1e5), stop_below=0.0001):
         self.walk_length = walk_length
         self.mode = mode
+        self.stop_below = stop_below
         super().__init__(max_iter=max_iter, fitness_function=fitness_function, verbose=verbose, max_local_movements=max_local_movements)
 
     def initialize(self, G):
@@ -72,9 +73,9 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
         G = nx.relabel_nodes(G, node2id)
 
         # initial_labels = np.array(list(partition_map.values()))
-
         word_vectors = self.level_word_vectors[-1]
-        last_diff = -1
+        curr_overall_differences, partition_gains = self._compute_overall_differences({node: 0 for node in partition_map_copy}, word_vectors)
+        last_diff = curr_overall_differences
         # initial run
         if self.mode == 0:
             # Random Order with closest neighbor initialisation
@@ -208,11 +209,11 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
             num_remaining_partitions = len(set(partition_map_copy.values()))
             iter_diff = curr_overall_differences - prev_iteration_sum
             print(f"Num Partitions {num_remaining_partitions} | Sum {curr_overall_differences} | Diff {np.abs(iter_diff)} | Last {np.abs(last_diff - iter_diff)}")
-            if np.abs(last_diff - iter_diff) < 0.0001:
+            if last_diff - iter_diff < self.stop_below:
                 print(f"BREAK: No difference from last run: {last_diff}:{iter_diff}")
                 # resulting_map = partition_map_copy.copy()
                 break
-            if num_remaining_partitions == 1:
+            if num_remaining_partitions == 1 and not self.mode == 3:
                 print(f"BREAK: Only one partition remained: {num_remaining_partitions}")
                 resulting_map = partition_map
                 break
@@ -225,6 +226,9 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
             last_diff = np.abs(iter_diff)
 
             cnt += 1
+            if self.mode == 3:
+                print("Mode 3 activated")
+                break
             # if
             if cnt >= self.max_iter:
                 print(f"Max iteration reached: {cnt}")

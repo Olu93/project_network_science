@@ -19,6 +19,13 @@
             "console": "internalConsole"
         },
         {
+            "name": "Python: Viz",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/playgrounds/experiment_viz.py",
+            "console": "internalConsole"
+        },
+        {
             "name": "Python: big",
             "type": "python",
             "request": "launch",

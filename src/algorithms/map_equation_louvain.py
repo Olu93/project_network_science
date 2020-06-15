@@ -6,6 +6,7 @@ import operator
 import warnings
 warnings.filterwarnings("ignore")
 
+
 class MapEquationMaximization(LouvainCoreAlgorithm):
     def initialize(self, G):
         initial_partition_map = dict(enumerate(G.nodes()))
@@ -19,9 +20,8 @@ class MapEquationMaximization(LouvainCoreAlgorithm):
         self.gain_stats = []
         return G, initial_partition_map
 
-
     def local_movement(self, G, partition_map):
-        print(partition_map)
+        # print(partition_map)
         unique_partitions = np.unique(list(partition_map.values()))
         # num_partitions = len(unique_partitions)
         cnt = 0
@@ -67,9 +67,9 @@ class MapEquationMaximization(LouvainCoreAlgorithm):
                 current_communities = set(partition_map.values())
                 empty_community = next(iter(set(range(min(current_communities), max(current_communities) + 2)) - set(current_communities)))
                 adj_prt_candiates = set([
-                    partition_map[adj] for adj in G[node] 
+                    partition_map[adj] for adj in G[node]
                     # if partition_map[adj] != node_prt
-                    ] + [empty_community])
+                ] + [empty_community])
                 for adj_prt in adj_prt_candiates:
                     # if adj_prt == node_prt:
                     #     if self.verbose: print(f"{node}: Skip {node_prt} -> {adj_prt}")
@@ -87,17 +87,16 @@ class MapEquationMaximization(LouvainCoreAlgorithm):
                 if len(change_candidates) == 0:
                     if self.verbose: print(f"{node}: No candidates available!")
                     continue
-                
+
                 chosen_change = min(change_candidates, key=operator.itemgetter(0))
                 new_L, curr_node, curr_node_prt, new_node_prt, new_A_prt = chosen_change
-                # if L - new_L > 0.0000:
-                if self.verbose: print(f"Decrease in average code length! {L} > {new_L}")
-                partition_map[curr_node] = new_node_prt
-                A_prt = new_A_prt
-                had_improvement = True
-                
+                if L - new_L > 0.0000:
+                    if self.verbose: print(f"Decrease in average code length! {L} > {new_L}")
+                    partition_map[curr_node] = new_node_prt
+                    A_prt = new_A_prt
+                    had_improvement = True
 
-                L = new_L
+                    L = new_L
                 # L_check_2, _, _ = map_equation(G, partition_map)
                 # L_check, _, _ = map_equation_old(G, partition_map)
                 # print("Compare")
@@ -107,22 +106,20 @@ class MapEquationMaximization(LouvainCoreAlgorithm):
                 # print("")
             num_remaining_partitions = len(set(partition_map.values()))
             print(f"Remaining partitions: {num_remaining_partitions}")
-            # if num_remaining_partitions <= 2:
-            #     print(f"BREAK: Only one partition remained: {num_remaining_partitions}")
-            #     return partition_map_copy, last_iter_L
+            if num_remaining_partitions <= 2:
+                print(f"BREAK: Too few partitions remained: {num_remaining_partitions}")
+                return partition_map_copy, last_iter_L
             if last_iter_L - L < self.stop_below:
                 print(f"BREAK: Improvement is marginal {last_iter_L} - {L} -> {last_iter_L - L} < {self.stop_below}")
                 break
             if had_improvement is False:
                 print(f"BREAK: No improvement happend {L}")
-                break 
+                break
             if cnt > self.max_iter:
                 print(f"BREAK: Max iteration reached {cnt}")
-                break 
-            last_iter_L = L     
+                break
+            last_iter_L = L
             cnt += 1
-
-
-        resulting_map = {id2node[node]: community for node, community in partition_map.items()} 
+        resulting_map = {id2node[node]: community for node, community in partition_map.items()}
         print(f"Resulting code length {L}")
         return resulting_map, last_iter_L

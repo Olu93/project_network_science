@@ -77,6 +77,7 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
         last_diff = -1
         # initial run
         if self.mode == 0:
+            # Random Order with closest neighbor initialisation
             random_node_order = np.random.permutation(list(partition_map_copy.keys()))
             for node_idx in random_node_order:
                 adj_nodes = list(G[node_idx])
@@ -85,6 +86,7 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
                 closest_node_idx, node_distance, new_prt = closest_node
                 partition_map_copy[node_idx] = new_prt
         elif self.mode == 1:
+            # Random Order with farthest neighbor initialization
             random_node_order = np.random.permutation(list(partition_map_copy.keys()))
             for node_idx in random_node_order:
                 adj_nodes = list(G[node_idx])
@@ -93,6 +95,7 @@ class GloveMaximizationAlgorithm(LouvainCoreAlgorithm):
                 closest_node_idx, node_distance, new_prt = closest_node
                 partition_map_copy[node_idx] = new_prt
         elif self.mode == 2:
+            # Random Order with Random neighbor partition assignment
             random_node_order = np.random.permutation(list(partition_map_copy.keys()))
             for node_idx in random_node_order:
                 adj_node = np.random.choice(list(G[node_idx]))

@@ -22,7 +22,7 @@
             "name": "Python: Viz",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/playgrounds/experiment_viz.py",
+            "program": "${workspaceFolder}/src/experiment_viz.py",
             "console": "internalConsole"
         },
         {

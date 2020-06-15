@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{quoting}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{natbib}
+\usepackage{xparse}
+\usepackage{url} 
+\usepackage[breaklinks=true]{hyperref}
+\usepackage{color}
+\usepackage{graphicx}
+% \usepackage{wrapfig}
+
+% \usepackage[latin1]{inputenc}                
+% \usepackage[T1]{fontenc}
+% \usepackage[backend=biber]{biblatex}
+% \usepackage[hyphens]{url}
+% \usepackage[hidelinks]{hyperref}
+
+
+
+\usepackage[backend=biber, sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=30mm,
+ right=30mm,
+ top=25mm,
+ }
+
+% fix boldness bug
+\begin{document}
+%% Article's information:
+% \title{Robots and Slavery - Is that a thing? }
+\title{A comparative study on different Models for Community Detection.}
+%% Author's information:
+\author{Olusanmi Hundogan\\M.Sc. Artificial Intelligence\\Utrecht University\\o.a.hundogan@students.uu.nl}
+
+\maketitle
+% \begin{abstract} %TODO
+% Summary of the article.
+% \end{abstract}
+%%
+
+%%%%%%%%%%%%%%%%%%%%%%%% Main text: %%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+Finding and understanding communities is one of the most prominent tasks in network science. Various applications range from finding communities in social networks, searching the web or predicting the spreading behaviour of a pandemic. A community is typically a set of densely connected vertices in which the within-community connection probability is substantially higher than the between-community connections.\cite{} There has been a couple of algorithms developed in recent years
+
+In this paper, I will compare different community models and ask the question which of those will yield the best performance. For that purpose I will fix the algorithm to a modified version of the Louvain algorithm. This algorithm was defined with modularity-optimization in mind. However, parts of this algorithm are also applicaple to the optimization of other models. The models that will be compared will be modularity-based (Modularity), informational (Map-Equation) and a statistical model.\cite{fortunato_CommunityDetectionNetworks_2016} With this comparison, I am going to answer which of this models is most suitable for real-world applications. 
+In order to compare these models fairly, the benchmark on which they apply must be stable, fast and well-researched. This automatically excludes many real-world network data sets. Hence, I will resort to a benchmark which sufficiently approximates the behaviour of real world networks. A popular benchmark for community detection was proposed by \citeauthor{girvan_CommunityStructureSocial_2002}, with a number of planted equally sized partitions and a fixed average node degree. 
+However, as the degree distribution of many real-world networks are heterogenous, the LFR benchmark yields a better approximation.\cite{lancichinetti_CommunityDetectionAlgorithms_2009} 
+This is because LFR community sizes and degree distributions follow the power-law. I will use different configurations to simulate various network "scenarios". For this purpose, I will largely follow the configurations used by \citeauthor{lancichinetti_CommunityDetectionAlgorithms_2009}. Aside from testing the models ability to detect communities, it will also be necessary to test their absence, by employing nullbenchmarks. For that purpose, I will test the models on random graphs, too, as they can't yield meaning full community structures.
+In order to measure the similarity between two communities the normalized mutual information measure has widely been used and is recommended by \citeauthor{fortunato_CommunityDetectionNetworks_2016}. This measure removes caveats of the traditional mutual information measure and provides comparability among different graphs.
+
+\newpage
+\printbibliography
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\par

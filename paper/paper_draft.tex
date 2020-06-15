@@ -1,0 +1,146 @@
+\documentclass[11pt, twocolumn]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{quoting}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{natbib}
+\usepackage{xparse}
+\usepackage{url} 
+\usepackage[breaklinks=true]{hyperref}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+
+% \usepackage{wrapfig}
+
+% \usepackage[latin1]{inputenc}                
+% \usepackage[T1]{fontenc}
+% \usepackage[backend=biber]{biblatex}
+% \usepackage[hyphens]{url}
+% \usepackage[hidelinks]{hyperref}
+
+
+
+\usepackage[backend=biber, sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=30mm,
+ right=30mm,
+ top=25mm,
+ }
+
+% fix boldness bug
+\begin{document}
+%% Article's information:
+% \title{Robots and Slavery - Is that a thing? }
+\title{A comparative study on different Models for Community Detection.}
+%% Author's information:
+% \author{Olusanmi Hundogan\\M.Sc. Artificial Intelligence\\Utrecht University\\o.a.hundogan@students.uu.nl}
+
+\maketitle
+% \begin{abstract} %TODO
+% Summary of the article.
+% \end{abstract}
+%%
+
+%%%%%%%%%%%%%%%%%%%%%%%% Main text: %%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+Finding and understanding communities is one of the most prominent tasks in network science. Various applications range from finding communities in social networks, searching the web or predicting the spreading behaviour of a pandemic. There are many ways to define a community, but a modern perspective describes as a set of densely connected vertices in which the within-community connection probability is substantially higher than the between-community connections.\cite{fortunato_CommunityDetectionNetworks_2016} There has been a multitude of algorithms developed in recent years and \citeauthor{lancichinetti_CommunityDetectionAlgorithms_2009} showed that InfoMap and the Louvain algorithm are among the most successful ones.\cite{lancichinetti_CommunityDetectionAlgorithms_2009} Both models are optimisation based and use the same core algorithm. However, they use different models and therefore quality functions to optimise against. This begs the question, which of these models show cases the best performance and how important is the model? For this purpose, this paper will compare different community models and fix the underlying partitioning algorithm. This partitioning algorithm is a modified version of the Louvain algorithm which was defined with modularity-optimization in mind.\cite{blondel_FastUnfoldingCommunities_2008} However, other models can be used as well. This is show-cased by the InfoMap algorithm, which uses the Map-Equation as quality function.\cite{rosvall_MapEquation_2009} 
+
+The paper is structured as follows. Section 2 will begin with the experimental setup, which contains a description of the Louvain algorthm, the benchmark graphs that will be use and the comparison metric. Thereafter, Section 3, will explain the various models that will be used in the analysis. Then, Section 4 will present the results of the analysis and finally, Section 5 will summarize the results.
+
+\section{Experimental setup}
+The analysis is done by comparing the performances of various models on undirected graphs. The experiment is written in Python and can be executed as Jupyter Notebook. The benchmarks are publicly available and the comparison metric was implemented by the author. However, there are also implementations publicly available implementations of the comparison metric. More details on how to download and execute the experiment are in the attachment section.
+
+\subsection{Preliminaries}
+As a prerequisite, it is necessary to establish some of the notations used in this paper. First, $G(V,E)$, $C$ and $P$ refer to a Graph, a community and a partition (which is a set of communities), respectively. $|V|= n$ are the number of vertices and $|E|=m$ is the number of edges. $p_{in}$ is the probability that a randomly chosen vertex within a community connects to another vertex from that same community. Likewise, $p_{ex}$ refers to the probability to connect to a vertex outside of the community. $A$ denotes the adjacency matrix of a graph and subscripts $i$ and $j$ its individual entries.
+
+\subsection{LFR - Benchmark}
+In order to compare these models fairly, the benchmark on which they apply must be stable, fast and well-researched. This automatically excludes many real-world network data sets. Hence, the analysis will resort to artificially created graphs as benchmark which sufficiently approximate the behaviour of real world networks. A popular benchmark for community detection was proposed by \citeauthor{girvan_CommunityStructureSocial_2002}, with a number of planted equally sized partitions and a fixed average node degree. It is based on the popular idea that vertices have a higher connection probability to vertices inside their respective community than outside ($p_{in} > p_{ex}$). However, most real-world networks do not display this behaviour, as the degree distribution of many real-world networks are heterogenous.\cite{lancichinetti_CommunityDetectionAlgorithms_2009} Hence, this paper will use the LFR model as a benchmark, because its community sizes and degree distributions follow the power-law distribution. $\tau_1$ and $\tau_2$ act as exponents for the power-law distributed degrees and community sizes, respectively. Further, the model introduces a mixing parameter $\mu$ which acts as an upper bound for the ratio between the external degree of a graph and its total degree. $\mu$ only depends on the network size and the size of the largest community and ensures the model remains well defined. Noteworthy, is the fact that communities are, are in principle detectable until $\mu<0.75$. Meaning, every model will break down after that threshold. For more details on the specific benchmark and its characteristics, see the original paper by \citeauthor{lancichinetti_CommunityDetectionAlgorithms_2009}. For this comparative analysis, both, $\tau_1$ and $\tau_2$, will remain fixed at -2 and -1, while $\mu$ will increase linearly from 0.1 to 0.8. This paper will present, two curves for each model which align with the chosen node size 250. The reported values will be averaged over ten runs per configuration. The overall experimental setup is largely inspired by \citeauthor{lancichinetti_CommunityDetectionAlgorithms_2009}'s experiment but smaller in scale, as the Louvain-core algorithm and the map-equation model are implemented in python which is significantly slower than typical implementations in C/C++.      
+
+
+\subsection{Normalized Mutual Information} 
+In literature, many metrics have been proposed to compare two partitions with one another. Many of them are rooted in clustering algorithm literature, due to similarities between community detection and clustering. In both the cases the metrics have to represent how closely a partition $P$ resembles the true partition. However, only a few of them are popular due to some of the idiosyncrasies in community detection. Metrics such as the Jaccard or Rand index are not normalized, while the \emph{fraction of correctly identified nodes} is not very well defined for case that are freqeuently encountered within community detection. For further information see \citeauthor{fortunato_CommunityDetectionNetworks_2016}. This paper will use the Normalized Mutual Information (NMI) score, due to its reliability. It is rooted in information theory and the idea is to measure how much information one partition yields about another. Mutual information can be measured in terms of the joint entropy of two random variables X and Y which represent the cluster assignments of the predicted and true partition, respectively. However, this metric is not normalized which is why we further divide by the sum of X and Y's entropies (H(X) and H(Y)). 
+
+\begin{equation}
+I(X,Y) = \sum_x\sum_y P(x,y) log\frac{P(x,y)}{P(x)P(y)}
+\end{equation}
+\begin{equation}
+I_{norm}(P_{pred},P_{true}) = \frac{2I(X,Y)}{H(X) + H(Y)}
+\end{equation}
+
+\subsection{Louvain Algorithm (Core)}
+As mentioned in the introduction, both -- the model and the optimization algorithm -- are separable and can be compared independently. As this paper is going to focus on the model, the optimization algorithm will remain fixed. This paper will use the Louvain-Algorithm by \cite{blondel_FastUnfoldingCommunities_2008}. The Louvain-Algorithm is a heuristic method and in essence a more efficient variant of the algorithm by \citeauthor{clauset_FindingCommunityStructure_2004}. The core of the algorithm can be divided in two phases:\cite{waltman_SmartLocalMoving_2013} First, all vertices are traversed in a random sequential order. For each vertex a quality function will evaluate whether moving the node to a community of an adjacent vertex yields an increase of the quality function's output. If that is the case, the node will be moved to that community, otherwise it remains in his community. This procedure will be repeated, until no movement results in any further increase. This initiates the second phase, in which the current communities are aggregated into a reduced graph. The nodes of this graph will contain a self-edges, whose weight will reflect the total amount of nodes aggregated in that respective community. Edges to other reduced vertices are taken from the total amount of edges that connected the communities in the original graph. Both phases will repeat until no further changes are applied and the maximal output is attained. The iterative application of both phases will be coined as core algorithm, as it is indifferent to the quality function and therefore the underlying model. The next section will discuss several quality functions that will be evaluated in the comparative analysis. However, it is worth mentioning that the algorithm \emph{maximises} the output of the quality function. Therefore, modifications are required if the model expects the \emph{minimization} of the quality function. But these modifications are trivial, because any minimization problem can be turned into a maximization problem by multiplying with -1. 
+
+\section{Models}
+In this paper, I am going to compare the results of X models. The core algorithm was implemented by the author to ensure that it remains fixed for all models. Most of the quality functions in use are publicly available. However, the map equation model was implemented from scratch as the only publicly available version is written as part of the C++ implementation by \citeauthor{blondel_FastUnfoldingCommunities_2008}. The quality function is tightly integrated into the overall InfoMap algorithm, which does not expose any isolated interface to the map equation function. 
+
+
+\subsection{Modularity}
+Modularity is probably the most popular quality function within the community detection literature.\cite{fortunato_CommunityDetectionGraphs_2010} It is able to measure the strength of separability of partitions and commonly used for optimisation-based techniques. The notion is that a graph with a particular community structure is noticeably different from a random graph which preserves some of the original partitioned graph's features but destroys the community structure. Modularity is defined by \autoref{eq:modularity}.
+
+\begin{equation}
+    \label{eq:modularity}
+    Q = \frac{1}{2m}\sum_{i,j}(A_{ij}-N_{ij})\delta(C_i,C_j)
+\end{equation}
+
+Here, $N$ represents the randomized copy of the graph. It is often called null model and can be defined in various ways, but the most common representation is $N_{ij} = \frac{k_ik_j}{2m}$. $\delta(C_i, C_j)$ is the kronecker-delta of both communities, meaning only vertices that belong to the same community contribute to the averaged distance. The model works well for a number of network, but it is widely known that the original definition suffers from resolution issues. As many networks display heterogeneous and hierarchical community structures, this limitation becomes an issue for benchmarks like LFR and real networks. This is especially showcased by the comparative analysis of \citeauthor{lancichinetti_CommunityDetectionAlgorithms_2009}, in which he shows how greedy modularisation models like the one from \citeauthor{clauset_FindingCommunityStructure_2004} broke down early when the mixing parameter increased.\cite{lancichinetti_CommunityDetectionAlgorithms_2009} However, the hierarchical nature of the Louvain-Core algorithm appears to mitigate resolution issues. 
+
+\subsection{Map-Equation}
+The next model is based on the flow dynamics of networks and was proposed by \citeauthor{rosvall_MapEquation_2009}.\cite{rosvall_MapEquation_2009} The core intuition is that a random walker on a network will remain "trapped" before exiting the community and changing to another. By encoding the individual nodes and transitions to other communities we can describe the \emph{path} of a random walker and the average code-length of required to encode the walk. This, in turn, corresponds with the entropy of encoding the node-visit and community-transition probabilities. Hence, the lowest entropy corresponds with the most efficient encoding of the random walk. And this applies to the partition which best captures the flow dynamics and therefore, the community structure of the network. For more information on the underlying intuition see \citeauthor{bohlin_CommunityDetectionVisualization_2014}. This intuition has lead to the Map-Equation, which computes the code-length $L$ of a partition $P$ given the graph $G$ at hand:
+
+\begin{equation}
+    \label{eq:mapequation}
+    L(P) = p_{ex} H(Q) + \sum_{i=1}^m p_{in}^iH(P^i)
+\end{equation}
+
+In equation \autoref{eq:mapequation}, L represents the function to compute the average code length which is a weighted sum of the transition entropies $H(Q)$ and the community entropies $H(\rho^i)$ for every community $i$. $p_{ex}$ and $p_{in}$ are the probabilities of transitioning and remaining in each module. These probabilities can be estimated by simulating a random walk on a graph. However, it is more efficient to use the power-iteration method on the transition-matrix to obtain the eigenvector. The normalized eigenvector represents the stationary distribution of the matrix. For undirected networks it is even possible to estimate the probabilities by computing the relative weights of each node.            
+
+\subsection{Coverage}
+Coverage is a fairly simple metric. It describes the ratio between the edges inside the community and the total amount of edges.\cite{fortunato_CommunityDetectionGraphs_2010} This quality function conveys the notion that there are significantly more intra-community edges than inter-community edges. Hence, the best partition is the one which maximizes the coverage. 
+
+\begin{equation}
+    Cov = \frac{1}{2m}\sum_{i,j}(A_{ij})\delta(C_i,C_j)
+\end{equation}
+
+The formula strongly resembles modularity. In, fact modularity can be seen as difference between the partition coverage and the expected coverage of the null model. Hence, it is expected, that this model will perform worse than modularity based approaches, as modularity takes idiosyncracies of the graph into account.
+
+\subsection{Baseline}
+In order to evaluate the importance of a model in general, it makes sense to include a baseline. That baseline algorithm will not utilize any specific model for community detection. For this purpose, the paper will include the performances of a simple label propagation algorithm. Label propagation strongly resembles the first phase of the louvain algorithm. However, it is purely heuristic and does not try to optimize any quality function.  
+
+\section{Results}
+{\color{red} Unfortunately, this part of the paper has not been completed yet, because the computations are still running. However, you will find the results on this \href{https://github.com/fallback2993/network_science}{github page}. In order to run the results yourself follow the README.md instructions. An updated version of this paper with result will also be put on github. }
+
+\section{Summary}
+This comparative analysis compared multiple models while keeping the algorithm fixed. With the results, the paper attempts to answer two important questions. First, how important is a sophisticated model for the community detection task. Second, which of the more popular models is the most effective.
+The results show clearly the importance of sophisticated models for community detection tasks. As for the first question, compared to the baseline model and the naive coverage maximization, the more sophisticated model driven approaches performed significantly better. However, one could argue that the label propagation method is not a sufficiently close model-free algorithm, as it only resembles the first phase of the Louvain algorithm. This question can only be answered by implementing a hierarchical variant of the algorithm and include this variant as a baseline algorithm. The question can be answered more clearly. Similar to what \cite{lancichinetti_CommunityDetectionAlgorithms_2009} showed in his comparative analysis, the Map-Equation model outperformed modularity-maximisation. However, the margin was small. Especially as both models work well on small n. \citeauthor{lancichinetti_CommunityDetectionAlgorithms_2009} shows that the Louvain algorithm breaks down earlier for large network sizes. In order to test these sizes, it is necessary to conduct the experiment with a faster programming language and with greater computational resources.  
+
+%It is rooted information theory and robust.     
+% In contrast to other metrics popular metrics, the NMI 
+
+% 0. Abstract 1 Column
+% 1. Introduction - 1 Column
+% 2. Experimental Setup (Benchmark, Metric, Algorithm) 2-3 Columns
+% 3. Models 2 Columns
+% 4. Tests (Results) <--- 2-3
+% 5. Summary 1 Columns
+
+
+% The models that will be compared will be modularity-based (Modularity), informational (Map-Equation), XXX and YYY.\cite{fortunato_CommunityDetectionNetworks_2016} With this comparison, I am going to answer which of this models is most suitable for real-world applications. 
+
+
+% In order to compare these models fairly, the benchmark on which they apply must be stable, fast and well-researched. This automatically excludes many real-world network data sets. Hence, I will resort to a benchmark which sufficiently approximates the behaviour of real world networks. A popular benchmark for community detection was proposed by \citeauthor{girvan_CommunityStructureSocial_2002}, with a number of planted equally sized partitions and a fixed average node degree. 
+% However, as the degree distribution of many real-world networks are heterogenous, the LFR benchmark yields a better approximation.\cite{lancichinetti_CommunityDetectionAlgorithms_2009} 
+% This is because LFR community sizes and degree distributions follow the power-law. I will use different configurations to simulate various network "scenarios". For this purpose, I will largely follow the configurations used by \citeauthor{lancichinetti_CommunityDetectionAlgorithms_2009}. Aside from testing the models ability to detect communities, it will also be necessary to test their absence, by employing nullbenchmarks. For that purpose, I will test the models on random graphs, too, as they can't yield meaning full community structures.
+% In order to measure the similarity between two communities the normalized mutual information measure has widely been used and is recommended by \citeauthor{fortunato_CommunityDetectionNetworks_2016}. This measure removes caveats of the traditional mutual information measure and provides comparability among different graphs.
+
+\newpage
+\printbibliography
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\par

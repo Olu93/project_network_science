@@ -44,25 +44,14 @@ if __name__ == "__main__":
     me_algorithm = MapEquationMaximization(fitness_function=None, max_iter=50, stop_below=0.0)
 
     algorithms_for_experiment = {
-        # infomap_algorithm.run:"Map Equation",
-        # coverage_algorithm.run:"Coverage Maximization",
-        # conductance_algorithm.run: "Conductance Maximization",
-        # lblprob_algorithm:"Labelpropagation Algorithm",
-        # louvain_algorithm.run: "Louvain Algorithm",
-        # glove_algorithm_normal.run:
-        # "Glove Mode Default",
-        # glove_algorithm_0.run:
-        # "Glove Mode 0",
-        # glove_algorithm_1.run:
-        # "Glove Mode 1",
-        # glove_algorithm_2.run:
-        # "Glove Mode 2",
-        # hlbl_algorithm.run:
-        # "Hierarchical Labelpropagation Algorithm",
-        me_algorithm.run:
-        "MapEquation Algorithm Fixed",
-        # random_algorithm.run:
-        # "Random Propagation Algorithm"
+        infomap_algorithm.run: "Map Equation",
+        coverage_algorithm.run: "Coverage Maximization",
+        lblprob_algorithm: "Labelpropagation Algorithm",
+        louvain_algorithm.run: "Louvain Algorithm",
+        glove_algorithm_normal.run: "Glove Mode Default",
+        hlbl_algorithm.run: "Hierarchical Labelpropagation Algorithm",
+        me_algorithm.run: "MapEquation Algorithm Fixed",
+        random_algorithm.run: "Random Propagation Algorithm"
     }
     cores = 8
     run_experiment(algorithms_for_experiment, "backup", cores)

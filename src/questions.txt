@@ -1,3 +1,0 @@
-[ ] How to reduce the word vectors
-[ ] Which distance function to use
-[ ] Which initialization to use

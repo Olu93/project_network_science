@@ -28,11 +28,11 @@ if __name__ == "__main__":
     # G = generator.planted_partition_graph(4, 25, p_in=0.9, p_out=0.1)
     # pos = nx.spring_layout(G)
     # true_partition = community_louvain.best_partition(G)
-    algorithm = GloveMaximizationAlgorithm(fitness_function=None, verbose=False, max_iter=50)
+    # algorithm = GloveMaximizationAlgorithm(fitness_function=None, verbose=False, max_iter=50)
     # algorithm = HierarchicalLabelPropagation(fitness_function=None, verbose=False, max_iter=50)
     # algorithm = RandomPropagation(fitness_function=None, verbose=False, max_iter=50)
     # algorithm = LouvainCoreAlgorithm(fitness_function=qfunctions.map_equation_wrapper_old, verbose=True, max_iter=50)
-    # algorithm = MapEquationMaximization(fitness_function=None, max_iter=50, stop_below=0.0)
+    algorithm = MapEquationMaximization(fitness_function=None, max_iter=100, stop_below=0.0)
     partition = algorithm.run(G)
     # # partition = community_louvain.best_partition(G)
     # # %%

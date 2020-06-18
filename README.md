@@ -1,7 +1,7 @@
 # project_network_science
 
 ## Experimental Setup
-This project contains the code required to reproduce the experiments conducted in the [comparative analysis of different models](./paper/paper_draft.pdf) for the Network Science lecture. The code contains an implementation of the Louvain-Core algorithm as well as implementations for the NMI metric and the Map-Equation.
+This project contains the code required to reproduce the experiments conducted in the [comparative analysis of different models](./paper/project_network_science.pdf) for the Network Science lecture. The code contains an implementation of the Louvain-Core algorithm as well as implementations for the NMI metric and the Map-Equation.
 
 ## Download code
 The code will be available as a copy within this zip. However, it is advised to download the most recent code from github.

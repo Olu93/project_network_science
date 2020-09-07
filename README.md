@@ -3,6 +3,9 @@
 ## Experimental Setup
 This project contains the code required to reproduce the experiments conducted in the [comparative analysis of different models](./paper/project_network_science.pdf) for the Network Science lecture. The code contains an implementation of the Louvain-Core algorithm as well as implementations for the NMI metric and the Map-Equation.
 
+## Content
+This paper investigates community detection and answers the question about the role of models and quality functions within community detection. For that purpose, the paper compares the performance of different quality functions while keeping a fixed partitioning algorithm. The paper also introduces a novel approach to community detection by employing node-embeddings learned by the GloVe method. The results show that the quality function does play an important role in the performance, but requires algorithmic procedures to mitigate inherent shortcomings of the model. The paper also shows that similarity-based methods can yield promising results if coupled with Deep Learning techniques. 
+
 ## Download code
 The code will be available as a copy within this zip. However, it is advised to download the most recent code from github.
 ```console

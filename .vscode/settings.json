@@ -13,5 +13,6 @@
         "**/*.code-search": true
     },
     // "python.auto"
-    "python.pythonPath": "C:\\Users\\ohund\\Anaconda3\\envs\\ptgpu\\python.exe"
+    "python.pythonPath": "C:\\Users\\ohund\\Anaconda3\\envs\\ptgpu\\python.exe",
+    "python.languageServer": "Microsoft"
 }
